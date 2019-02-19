@@ -2,8 +2,8 @@
 REM Script de merge automatico de todos los rpd en la carpeta 'rpd'
 REM Los ficheros RPD dentro de la carpeta 'rpd' no pueden tener espacios en el nombre
 
-echo automerge version 19.01.0
-
+echo automerge version 19.02.0
+REM formato version: YEAR.MONTH.RELEASE
 
 for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do echo %%I
 
@@ -12,6 +12,7 @@ set "scriptdir=%~dp0"
 set "startdir=%cd%"
 set "rpd_pass=Admin123"
 
+REM la variable mergedir indica donde se realizara el automerge
 IF %1.==. GOTO ArgNo
 set "mergedir=%1"
 GOTO ArgEnd
@@ -41,9 +42,9 @@ set /a plus = 2
 
 set last=borrado_base
 
-ECHO -------------------------------------
-ECHO Empieza el proceso iterativo de merge
-ECHO -------------------------------------
+ECHO -----------------------------------------
+ECHO --Empieza el proceso iterativo de merge--
+ECHO -----------------------------------------
 
 FOR /F %%I in ('dir /B /O:S rpd\*.rpd') DO (
 REM for %%I in (rpd\*.rpd) do (
@@ -69,6 +70,7 @@ ECHO(
 )
 
 GOTO NoComp
+REM Actualmente este trozo no se ejecuta
 
 ECHO --------------------
 ECHO Se crearan los compares para cada proyecto
@@ -105,10 +107,11 @@ GOTO BadEnd
 
 :ErrorNB
 echo No se ha encontrado un fichero base (borrado/modified) donde aplicar los parches en la carpeta %mergedir%
+echo Asegurate que en esta carpeta hay algun fichero RPD que contenga la palabra 'borrado' en su nombre
 GOTO BadEnd
 
 :BadEnd
-echo Finalizando el programa sin realizar el merge
+echo Finalizando el programa sin realizar el merge (ver errores indicados arriba)
 set ERRORLEVEL=1
 GOTO EndEnd
 
@@ -119,7 +122,7 @@ GOTO EndEnd
 
 :EndEnd
 rem del *.automerge
-del patch_*.xml
+del /q patch_*.xml
 rd /s /q equ
 for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do echo %%I
 
