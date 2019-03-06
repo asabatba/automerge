@@ -2,10 +2,10 @@
 REM Script de merge automatico de todos los rpd en la carpeta 'rpd'
 REM Los ficheros RPD dentro de la carpeta 'rpd' no pueden tener espacios en el nombre
 
-echo automerge version 19.02.0
-REM formato version: YEAR.MONTH.RELEASE
+echo automerge version 19.03.0
+REM formato version: YEAR.MONTH.RELEASE(empieza por 0)
 
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do echo %%I
+REM for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do echo %%I
 
 setlocal ENABLEDELAYEDEXPANSION
 set "scriptdir=%~dp0"
@@ -20,10 +20,15 @@ GOTO ArgEnd
 :ArgNo
 set "mergedir=.\"
 :ArgEnd
+
+echo El automerge se realizara en la carpeta "%mergedir%"
 cd %mergedir%
 
-mkdir equ
-mkdir automerges
+
+
+echo Se crean las carpetas donde se almacenan los RPD intermedios
+md equ 2>NUL
+md automerges 2>NUL
 ECHO(
 
 :BuscarB
@@ -93,20 +98,20 @@ rem del merge*.automerge
 goto GoodEnd
 
 :ErrorEQ
-echo Se ha producido un error durante el comando de igualado de RPDs { !current! }
+echo Error: Se ha producido un error durante el comando de igualado de RPDs { !current! }
 GOTO BadEnd
 :ErrorGen
-echo Se ha producido un error durante el comando de generación de XML { !current! }
+echo Error: Se ha producido un error durante el comando de generación de XML { !current! }
 GOTO BadEnd
 :ErrorExe
-echo Se ha producido un error durante el comando de fusionado de paquetes { !current! }
+echo Error: Se ha producido un error durante el comando de fusionado de paquetes { !current! }
 GOTO BadEnd
 :ErrorComp
-echo Se ha producido un error durante el comando de compare de paquetes { !current! }
+echo Error: Se ha producido un error durante el comando de compare de paquetes { !current! }
 GOTO BadEnd
 
 :ErrorNB
-echo No se ha encontrado un fichero base (borrado/modified) donde aplicar los parches en la carpeta %mergedir%
+echo Error: No se ha encontrado un fichero base (borrado/modified) donde aplicar los parches en la carpeta "%mergedir%"
 echo Asegurate que en esta carpeta hay algun fichero RPD que contenga la palabra 'borrado' en su nombre
 GOTO BadEnd
 
@@ -122,9 +127,9 @@ GOTO EndEnd
 
 :EndEnd
 rem del *.automerge
-del /q patch_*.xml
+del /q patch_*.xml 2>NUL
 rd /s /q equ
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do echo %%I
+REM for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do echo %%I
 
 IF %1.==. GOTO :eof
 cd %startdir%
