@@ -10,6 +10,8 @@ REM for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list')
 setlocal ENABLEDELAYEDEXPANSION
 set "scriptdir=%~dp0"
 set "startdir=%cd%"
+REM variable con el nombre de la carpeta con los RPDs de las aplicaciones
+set "carpeta_rpd=rpd"
 set "rpd_pass=Admin123"
 
 REM la variable mergedir indica donde se realizara el automerge
@@ -24,7 +26,17 @@ set "mergedir=.\"
 echo El automerge se realizara en la carpeta "%mergedir%"
 cd %mergedir%
 
+REM comprobamos si la carpeta con las aplicaciones existe y tiene ficheros
+if not exist %carpeta_rpd% (
+  GOTO ErrorNoCarpetaRPD
+)
 
+set _TMP=
+for /f "delims=" %%a in ('dir /b %carpeta_rpd%') do set _TMP=%%a
+
+IF {%_TMP%}=={} (
+  GOTO ErrorNoRPDs 
+)
 
 echo Se crean las carpetas donde se almacenan los RPD intermedios
 md equ 2>NUL
@@ -51,7 +63,7 @@ ECHO -----------------------------------------
 ECHO --Empieza el proceso iterativo de merge--
 ECHO -----------------------------------------
 
-FOR /F %%I in ('dir /B /O:S rpd\*.rpd') DO (
+FOR /F %%I in ('dir /B /O:S %carpeta_rpd%\*.rpd') DO (
 REM for %%I in (rpd\*.rpd) do (
 
 set "current=%%~nI"
@@ -81,7 +93,7 @@ ECHO --------------------
 ECHO Se crearan los compares para cada proyecto
 ECHO --------------------
 
-FOR /F %%I in ('dir /B /O:S rpd\*.rpd') DO (
+FOR /F %%I in ('dir /B /O:S %carpeta_rpd%\*.rpd') DO (
 echo | CALL %scriptdir%\comparerpd -C automerges\merge_!current!.rpd -P C41x4B4nkRpd -G rpd\%%I -W Admin123 -O rpd\%%~nI.csv -8
 
 IF %ERRORLEVEL% NEQ 0 GOTO ErrorComp
@@ -96,6 +108,13 @@ set datetime=%datetime:~0,8%_%datetime:~8,4%
 copy automerges\merge_!current!.rpd %datetime%_automerge.rpd /y
 rem del merge*.automerge
 goto GoodEnd
+
+:ErrorNoCarpetaRPD
+echo Error: No se ha encontrado la carpeta con los RPD de las aplicaciones {%carpeta_rpd%}
+GOTO BadEnd
+:ErrorNoRPDs
+echo Error: La carpeta con los RPD de las aplicaciones esta vacia {%carpeta_rpd%}
+GOTO BadEnd
 
 :ErrorEQ
 echo Error: Se ha producido un error durante el comando de igualado de RPDs { !current! }
